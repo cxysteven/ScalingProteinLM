@@ -81,6 +81,12 @@ def fit_linear_curve(x,y, is_ND=True):
 
 # Citation
 ```bibtex
+@article{chen2024xtrimopglm,
+  title={xTrimoPGLM: unified 100B-scale pre-trained transformer for deciphering the language of protein},
+  author={Chen, Bo and Cheng, Xingyi and Li, Pan and Geng, Yangli-ao and Gong, Jing and Li, Shen and Bei, Zhilei and Tan, Xu and Wang, Boyan and Zeng, Xin and others},
+  journal={arXiv preprint arXiv:2401.06199},
+  year={2024}
+}
 @article{cheng2024training,
   title={Training Compute-Optimal Protein Language Models},
   author={Cheng, Xingyi and Chen, Bo and Li, Pan and Gong, Jing and Tang, Jie and Song, Le},
