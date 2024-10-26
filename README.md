@@ -1,6 +1,6 @@
 # Training Compute-Optimal Protein Language Models
 
-![](plotfigures/scaling_law.png)
+![](plotsfigures/scaling_law.png)
 
 We explore optimally training protein language models, an area of significant interest in biological research where guidance on best practices is limited. 
 Most models are trained with extensive compute resources until performance gains plateau, focusing primarily on increasing model sizes rather than optimizing the
