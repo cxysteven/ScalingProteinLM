@@ -1,0 +1,8 @@
+# Versions used to re-execute the notebooks in plot_examples/ (Python 3.11).
+numpy==2.4.6
+scipy==1.17.1
+pandas==3.0.6
+matplotlib==3.11.2
+# Needed only to execute the notebooks from the command line / a Jupyter kernel.
+nbconvert==7.17.1
+ipykernel==7.3.0
