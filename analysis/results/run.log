@@ -1,0 +1,9 @@
+CLM log200    D_row n=129 | paper p0 -> beta=0.4953 | grid best beta=0.0599 E=1.43e-90 obj=4.560e-04 | obj at published 1.439e-03 | 167s
+CLM log200    D_c6n n=129 | paper p0 -> beta=0.0614 | grid best beta=0.0612 E=3.52e-24 obj=4.490e-04 | obj at published 1.416e-03 | 165s
+CLM run-final D_row n=115 | paper p0 -> beta=0.0675 | grid best beta=0.0672 E=2.65e-54 obj=4.047e-04 | obj at published 1.377e-03 | 142s
+CLM run-final D_c6n n=115 | paper p0 -> beta=0.0681 | grid best beta=0.0678 E=1.23e-21 obj=3.986e-04 | obj at published 1.361e-03 | 142s
+MLM log200    D_row n=136 | paper p0 -> beta=0.4860 | grid best beta=0.0544 E=5.7e-129 obj=8.668e-04 | obj at published 1.267e-03 | 85s
+MLM log200    D_c6n n=136 | paper p0 -> beta=0.4872 | grid best beta=0.0573 E=4.08e-190 obj=9.395e-04 | obj at published 1.249e-03 | 84s
+MLM run-final D_row n= 82 | paper p0 -> beta=0.0998 | grid best beta=0.0998 E=0 obj=4.536e-04 | obj at published 4.544e-04 | 106s
+MLM run-final D_c6n n= 82 | paper p0 -> beta=0.4992 | grid best beta=0.1046 E=1.32e-210 obj=5.083e-04 | obj at published 5.131e-04 | 105s
+wrote /home/user/ScalingProteinLM/analysis/results
