@@ -64,5 +64,10 @@ def main():
     md += ["\n## MLM 1.2B FLOPs-axis error at the 1e21 budget\n",
            "The 1.2B MLM curve's exported FLOPs axis was generated with N = 1e9 instead of the true 1.2086e9, so its compute is understated by 17%. Re-read on the corrected axis its 1e21 loss is 1.987 against 1.986 for 1.5B: a tie within noise.",
            f"MLM raw-min exponent with the 1e21 minimum at 1.2B (as published): {slope(Cs, Ns):.3f}; at 1.5B: {slope(Cs, alt):.3f}.\n"]
+    with open(os.path.join(OUT, "isoflop_points.csv"), "w") as fh:
+        fh.write("objective,budget_flops,model_size_label,N_params,final_validation_loss\n")
+        for name, tab in [("CLM", CLM), ("MLM", MLM)]:
+            for C in sorted(tab):
+                for k, v in tab[C].items(): fh.write(f"{name},{C:.0e},{k},{SIZE[k]},{v}\n")
     open(os.path.join(OUT, "isoflop_uncertainty.md"), "w").write("\n".join(md) + "\n"); print("\n".join(md))
 if __name__ == "__main__": main()

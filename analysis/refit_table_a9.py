@@ -20,7 +20,7 @@ Usage:  cd analysis && python3 refit_table_a9.py [--bootstrap]
 Writes: results/table_a9_refit.json, results/table_a9_refit.md,
         results/envelope_{CLM,MLM}_{log200,run-final}.csv, results/per_run_table.csv
 """
-import os, re, sys, json, time, itertools, argparse
+import os, re, sys, json, time, itertools, argparse, hashlib
 import numpy as np, pandas as pd
 from multiprocessing import Pool
 from scipy.optimize import minimize
@@ -47,7 +47,8 @@ def load_runs(obj):
             if not f.endswith(".csv"): continue
             raw = pd.read_csv(os.path.join(p, f))                       # columns: Wall time, Step (GFLOPs), Value (loss)
             hist = raw.iloc[1:].reset_index(drop=True)                  # the original code used skiprows=2: header + first row
-            runs.append(dict(obj=obj, dir=d, file=f, key=key, N=MODEL_SIZE.get(key), used=f.startswith("run") and key in MODEL_SIZE,
+            sha = hashlib.sha256(open(os.path.join(p, f), "rb").read()).hexdigest()[:12]
+            runs.append(dict(obj=obj, dir=d, file=f, key=key, sha=sha, N=MODEL_SIZE.get(key), used=f.startswith("run") and key in MODEL_SIZE,
                              interval=(1024*1024*300 if key.endswith('B') else 512*1024*300), raw=raw, hist=hist))
     return runs
 
@@ -68,14 +69,32 @@ def envelope(runs, design):
                 best[T] = dict(C_target=T, C_matched=F[i]*1e9, N=r["N"], L=L[i], D_row=(i+1)*r["interval"], D_c6n=F[i]*1e9/(6*r["N"]), run=r["file"])
     return pd.DataFrame([best[k] for k in sorted(best)])
 
+def known_issue(r):
+    notes = []
+    if "mlm_1b_all1ep_noreg_tk200b" in r["file"] and "gigaflos" in r["file"]:
+        notes.append("FLOPs axis reconstructed from the text log with N=1e9 (17% low); multiply C by 1.208618992")
+    if r["dir"].startswith("6M_flops") and "gpt_10M" in r["file"]:
+        notes.append("10M run stored under the 6M directory; the notebook assigns it N=6.29M")
+    if r["file"].startswith("dep-"):
+        notes.append("deprecated run; excluded by the notebook's 'run' prefix filter")
+    if r["N"] is None:
+        notes.append("model size not in the notebook's size map; excluded from its fits")
+    if len(r["raw"]) == 1000:
+        notes.append("TensorBoard export capped at 1000 points; row index is not the evaluation index")
+    return "; ".join(notes)
+
 def per_run_table(runs):
+    first_by_sha = {}
+    for r in runs: first_by_sha.setdefault(r["sha"], f'{r["dir"]}/{r["file"]}')
     rows = []
     for r in runs:
         raw = r["raw"]; C = raw["Step"].iloc[-1]*1e9; ep = re.search(r'all([\d.]+)ep', r["file"]); bsz = re.search(r'bsz([\d.]+[mMkK]?)', r["file"])
+        me = f'{r["dir"]}/{r["file"]}'; dup = first_by_sha[r["sha"]]
         rows.append(dict(objective=r["obj"], directory=r["dir"], run_file=r["file"], N_params_no_embed=r["N"], C_final_flops=C,
                          D_final_tokens_C_over_6N=(C/(6*r["N"]) if r["N"] else np.nan), epoch_label=(float(ep.group(1)) if ep else np.nan),
                          batch_label=(bsz.group(1) if bsz else ""), L_final=raw["Value"].iloc[-1], L_min=raw["Value"].min(), n_logged_points=len(raw),
-                         tensorboard_capped_1000=len(raw) == 1000, in_released_notebook_fit=bool(r["used"])))
+                         tensorboard_capped_1000=len(raw) == 1000, in_released_notebook_fit=bool(r["used"]),
+                         content_sha256_12=r["sha"], identical_content_as=(dup if dup != me else ""), known_issue=known_issue(r)))
     return pd.DataFrame(rows)
 
 # ----------------------------------------------------------------------------- objective
@@ -130,9 +149,15 @@ def bootstrap(C, N, D, L, pool, B=200, seed=1):
 
 # ----------------------------------------------------------------------------- main
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--bootstrap", action="store_true"); ap.add_argument("--workers", type=int, default=4); args = ap.parse_args()
+    ap = argparse.ArgumentParser(); ap.add_argument("--bootstrap", action="store_true"); ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--tables-only", action="store_true", help="regenerate the envelope and per-run tables without refitting"); args = ap.parse_args()
     for v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"): os.environ.setdefault(v, "1")
     os.makedirs(OUT, exist_ok=True); results = {}; per_run = []
+    if args.tables_only:
+        for obj in ["CLM", "MLM"]:
+            runs = load_runs(obj); per_run.append(per_run_table(runs))
+            for design in ["log200", "run-final"]: envelope(runs, design).to_csv(os.path.join(OUT, f"envelope_{obj}_{design}.csv"), index=False)
+        pd.concat(per_run).to_csv(os.path.join(OUT, "per_run_table.csv"), index=False); print("tables written to", OUT); return
     with Pool(args.workers) as pool:
         for obj in ["CLM", "MLM"]:
             runs = load_runs(obj); per_run.append(per_run_table(runs))
