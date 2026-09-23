@@ -98,3 +98,11 @@ Per-budget minimum (mean of last 5): 1e+18: N=9,830,400 (gap to 2nd best 0.0009,
 
 P(MLM exponent > CLM exponent) on the rebuilt last-5 tables under noise 0.005: 0.916
 P(MLM exponent > CLM exponent) on the rebuilt last-5 tables under noise 0.01: 0.875
+
+## Compute-optimal model size at the paper's comparison budgets
+
+| objective | budget | published law | rebuilt, raw min | rebuilt, parabola | 95% under noise 0.01 |
+|---|---|---|---|---|---|
+| CLM | PROGEN2-xlarge budget, 1.34e+22 FLOPs | 7.8B | 9.8B | 7.6B | 3.8 to 15.2B |
+| CLM | budget of the paper's 7.2B model, 1.14e+22 FLOPs | 7.1B | 8.8B | 6.8B | 3.5 to 13.5B |
+| MLM | ESM-2 3B budget, 1.68e+22 FLOPs | 10.9B | 8.8B | 7.7B | 4.7 to 13.5B |

@@ -103,6 +103,17 @@ def main():
     for sd in (0.005, 0.010):
         m = summary["MLM"]["L_last5"][f"raw_sd{sd}"][2]; c = summary["CLM"]["L_last5"][f"raw_sd{sd}"][2]
         md.append(f"P(MLM exponent > CLM exponent) on the rebuilt last-5 tables under noise {sd}: {np.mean(m > c):.3f}")
+    # compute-optimal sizes at the budgets the paper used for its PROGEN2 / ESM-2 comparison (Table of model architectures)
+    def fit_law(Cs, Ns): a, b = np.polyfit(np.log10(Cs), np.log10(Ns), 1); return 10 ** b, a
+    PUB = {"CLM": (1.26e-3, 0.578), "MLM": (6.19e-8, 0.776)}
+    cases = {"CLM": [("PROGEN2-xlarge budget", 1.34e22), ("budget of the paper's 7.2B model", 1.14e22)], "MLM": [("ESM-2 3B budget", 1.68e22)]}
+    md += ["\n## Compute-optimal model size at the paper's comparison budgets\n", "| objective | budget | published law | rebuilt, raw min | rebuilt, parabola | 95% under noise 0.01 |", "|---|---|---|---|---|---|"]
+    for obj, T in zip(["CLM", "MLM"], allpts):
+        tab5 = table(T, "L_last5"); law_raw = fit_law(*minima(tab5, "raw")); law_par = fit_law(*minima(tab5, "para"))
+        noise = [fit_law(*minima(tab5, "raw", 0.01, rng)) for _ in range(3000)]
+        for name, C in cases[obj]:
+            Ns = np.array([g * C ** a for g, a in noise]); f = lambda gA: gA[0] * C ** gA[1] / 1e9
+            md.append(f"| {obj} | {name}, {C:.2e} FLOPs | {f(PUB[obj]):.1f}B | {f(law_raw):.1f}B | {f(law_par):.1f}B | {np.percentile(Ns, 2.5)/1e9:.1f} to {np.percentile(Ns, 97.5)/1e9:.1f}B |")
     P = pd.concat(allpts).drop(columns=["sha"]); P.to_csv(os.path.join(OUT, "isoflop_rebuilt_points.csv"), index=False)
     open(os.path.join(OUT, "isoflop_rebuild.md"), "w").write("\n".join(md) + "\n"); print("\n".join(md))
 if __name__ == "__main__": main()
