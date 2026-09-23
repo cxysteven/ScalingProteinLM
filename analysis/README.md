@@ -53,6 +53,17 @@ implementation subtracts it after the LSE), and the appendix describes the fitti
 loss points of all the CLM and MLM that are run" whereas the code fits a lower envelope in which
 most runs' final points are replaced by a better run at the same compute.
 
+## Rebuilding the IsoFLOP tables from the curves
+
+`isoflop_rebuild.py` regenerates the main-figure tables directly from the released curves (runs trained
+to one of the seven budgets, duplicates counted once, the mis-axised MLM 1.2B curve excluded), using
+both the last logged loss and the mean of the last five logged losses, and traces every hand-entered
+value to the run that produced it. Results in `results/isoflop_rebuild.md`. Roughly a fifth of the
+hand-entered values have no released run within 0.003 at their budget; the whole CLM 1e21 row sits
+0.016 to 0.023 below every released curve, so those points came from runs or evaluations that are not
+in the release. On the released curves the model-size exponents are about 0.63 to 0.68 (CLM) and 0.71
+to 0.74 (MLM), against 0.578 and 0.776 in the paper; MLM > CLM holds in 88 to 92% of noise draws.
+
 ## Definitions used throughout
 
 - N: non-embedding parameter count, from the directory name via the size map in the notebook.
